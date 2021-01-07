@@ -11,7 +11,6 @@
 #include "glm/gtc/type_ptr.hpp" 
 
 gps::Window myWindow;
-gps::Model3D teapot;
 gps::Model3D island;
 gps::Model3D shark1, shark2, shark3, shark4;
 gps::Model3D gull1, gull2, gull3, gull4, gull5, gull6, gull7, gull8;
@@ -20,6 +19,8 @@ gps::Model3D cloud;
 gps::Model3D rain1, rain2;
 gps::Model3D fire;
 gps::Model3D moon;
+gps::Model3D sky;
+gps::Model3D chest_up;
 gps::Camera myCamera(
 	glm::vec3(1.0f, 1.0f, 1.0f),
 	glm::vec3(0.0f, 0.0f, 0.0f),
@@ -32,12 +33,16 @@ gps::Shader fogShader;
 
 glm::mat4 modelShark1, modelShark2, modelShark3, modelShark4;
 glm::mat4 modelGull1, modelGull2, modelGull3, modelGull4, modelGull5, modelGull6, modelGull7, modelGull8;
-glm::mat4 modelGarf;
+glm::mat4 modelGarf1;
+glm::mat4 modelGarf2;
+glm::mat4 modelGarf3;
 glm::mat4 modelRain1, modelRain2, modelRain3;
 glm::mat4 modelRain4, modelRain5, modelRain6;
 glm::mat4 modelCloud;
 glm::mat4 modelFire;
 glm::mat4 modelMoon;
+glm::mat4 modelSky;
+glm::mat4 modelChestUp, modelChestUp2, modelChestUp3, modelChestUp4;
 glm::mat4 model;
 glm::mat4 view;
 glm::mat4 projection;
@@ -49,7 +54,7 @@ glm::vec3 lightDir;
 glm::vec3 lightColor;
 
 GLfloat angle;
-GLuint modelLoc;
+GLuint modelLoc, modelLoc2;
 GLuint viewLoc;
 GLuint projectionLoc;
 GLuint normalMatrixLoc;
@@ -72,8 +77,8 @@ float rain_var2 = 0;
 bool rain_bool = false;
 bool rain_bool2 = false;
 bool shader_swap = true;
-const unsigned int SHADOW_WIDTH = 2048;
-const unsigned int SHADOW_HEIGHT = 2048;
+const unsigned int SHADOW_WIDTH = 8192;
+const unsigned int SHADOW_HEIGHT = 8192;
 float pitchkey, yawkey;
 bool pressedKeys[1024];
 float yaw = 0.0f;
@@ -82,6 +87,7 @@ bool showDepthMap;
 bool begin = true;
 float x_aux, y_aux, dx, dy, limit_y = 0;
 float angleY = 0.0f;
+bool first = true;
 
 GLenum glCheckError_(const char* file, int line)
 {
@@ -165,7 +171,7 @@ void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 	else {
 		dx = xpos - x_aux;
 		dy = ypos - y_aux;
-		if (limit_y + dy < 800.0f && limit_y + dy >-800) 
+		if (limit_y + dy < 1000.0f && limit_y + dy >-1000) 
 		{
 			myCamera.rotate(-0.01f * dy, 0.01f * dx);
 			limit_y += dy;
@@ -177,6 +183,17 @@ void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 
 void processMovement()
 {
+	if (pressedKeys[GLFW_KEY_Q]) {
+		angle -= 1.0f;
+		model = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0, 1, 0));
+		first = false;
+	}
+
+	if (pressedKeys[GLFW_KEY_E]) {
+		angle += 1.0f;
+		model = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0, 1, 0));
+		first = false;
+	}
 	if (pressedKeys[GLFW_KEY_W]) 
 		myCamera.move(gps::MOVE_FORWARD, cameraSpeed);
 
@@ -211,7 +228,6 @@ void processMovement()
 		glEnable(GL_POLYGON_SMOOTH);
 		//glEnable(GL_LINE_SMOOTH);
 		glBlendFunc(GL_SRC_ALPHA_SATURATE, GL_ONE);
-
 	}
 
 }
@@ -238,7 +254,7 @@ void initOpenGLState()
 
 void initModels() 
 {
-	island.LoadModel("models/island1/boss3.obj");
+	island.LoadModel("models/island1/map1.obj");
 	shark1.LoadModel("models/shark1/shark1.obj");
 	shark2.LoadModel("models/shark1/shark2.obj");
 	shark3.LoadModel("models/shark1/shark3.obj");
@@ -256,6 +272,8 @@ void initModels()
 	rain2.LoadModel("models/rain/rain2.obj");
 	fire.LoadModel("models/fire/foc.obj");
 	moon.LoadModel("models/moon/moon.obj");
+	sky.LoadModel("models/sky/sky.obj");
+	chest_up.LoadModel("models/chest_up/chest_up.obj");
 }
 
 void initShaders() 
@@ -275,7 +293,7 @@ glm::mat4 computeLightSpaceTrMatrix()
 		lightView = glm::lookAt(glm::vec3(0.0f, 1.3533f, -0.002f), glm::vec3(-0.15f, 0.40f, -0.002f), glm::vec3(1.0f, 1.0f, 1.0f));
 
 	const GLfloat near_plane = 0.1f, far_plane = 5.0f;
-	glm::mat4 lightProjection = glm::ortho(-2.0f, 2.0f, -2.0f, 2.0f, near_plane, far_plane);
+	glm::mat4 lightProjection = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, near_plane, far_plane);
 	glm::mat4 lightSpaceTrMatrix = lightProjection * lightView;
 
 	return lightSpaceTrMatrix;
@@ -288,6 +306,7 @@ void initUniforms()
 
 	model = glm::mat4(1.0f);
 	modelLoc = glGetUniformLocation(myCustomShader.shaderProgram, "model");
+	
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
 	if (light_var > 0)
@@ -371,6 +390,34 @@ void drawObjects(gps::Shader shader, bool depthPass)
 	island.Draw(shader);
 	fire.Draw(shader);
 
+
+
+	/*if (pressedKeys[GLFW_KEY_Q]) {
+		modelSky = lightRotation;
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelSky));
+		sky.Draw(shader);
+	}
+	else
+		sky.Draw(shader);
+
+	if (pressedKeys[GLFW_KEY_E]) {
+		modelSky = lightRotation;
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelSky));
+		sky.Draw(shader);
+	}
+	else*/
+	sky.Draw(shader);
+
+
+	modelChestUp2 = glm::translate(glm::mat4(1.0f), glm::vec3(-0.477693f, 0.141047f, -0.124566f));
+	modelChestUp = glm::rotate(glm::mat4(1.0f), glm::radians(angleY), glm::vec3(0, 0, 1));
+	modelChestUp3 = glm::translate(glm::mat4(1.0f), glm::vec3(0.477693f, -0.141047f, +0.124566f));
+	modelChestUp3 = modelChestUp3 * modelChestUp * modelChestUp2;
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelChestUp3));
+	chest_up.Draw(shader);
+	
+	
+
 	if (light_var < 0)
 	{
 		modelMoon = glm::rotate(glm::mat4(1.0f), glm::radians(angleY), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -378,9 +425,12 @@ void drawObjects(gps::Shader shader, bool depthPass)
 		moon.Draw(shader);
 	}
 
-	modelGarf = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, jump_var, 0.0f));
-	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelGarf));
 
+	modelGarf1 = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0, 1, 0));
+	modelGarf2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, jump_var, 0.0f));
+	modelGarf3 = modelGarf1 * modelGarf2;
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelGarf3));
+	
 	if (jump_bool) 
 	{
 		jump_var -= 0.003f;

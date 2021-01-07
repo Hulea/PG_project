@@ -71,7 +71,9 @@ namespace gps {
         }
 
         glm::mat4 Camera::getSmallLightPointMatrix() {
-            return glm::lookAt(glm::vec3(0.0f, 1.3533f, -0.002f), glm::vec3(-0.15f, 0.40f, -0.002f), cameraUpDirection);
+            glm::vec3 start = glm::vec3(0.0f, 1.3533f, -0.002f);
+            glm::vec3 end = glm::vec3(-0.15f, 0.40f, -0.002f);
+            return glm::lookAt(start, end, cameraDirection);
         }
 
 

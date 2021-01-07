@@ -70,7 +70,7 @@ else
 	vec3 normalEye = normalize(fNormal);	
 	
 	//compute light direction
-	vec3 lightDirN = normalize(pointPosition - smallLightPosEye.xyz);
+	vec3 lightDirN = normalize(lightDir);
 	
 	//compute view direction 
 	vec3 viewDirN = normalize(pointPosition - smallLightPosEye.xyz);
@@ -131,8 +131,6 @@ float computeFog()
 void main() 
 {
 	computeLightComponents();
-	
-	vec3 baseColor = vec3(0.9f, 0.35f, 0.0f);//orange
 	
 	float shadow = computeShadow();
 
