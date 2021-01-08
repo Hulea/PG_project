@@ -70,7 +70,7 @@ else
 	vec3 normalEye = normalize(fNormal);	
 	
 	//compute light direction
-	vec3 lightDirN = normalize(lightDir);
+	vec3 lightDirN = normalize(pointPosition - smallLightPosEye.xyz);
 	
 	//compute view direction 
 	vec3 viewDirN = normalize(pointPosition - smallLightPosEye.xyz);

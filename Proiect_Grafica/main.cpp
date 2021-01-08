@@ -86,7 +86,9 @@ float pitch = 0.0f;
 bool showDepthMap;
 bool begin = true;
 float x_aux, y_aux, dx, dy, limit_y = 0;
-float angleY = 0.0f;
+float globalObjRotationAngle = 0.0f;
+float chestRotation = 0.0f;
+int chest_var = false;
 bool first = true;
 
 GLenum glCheckError_(const char* file, int line)
@@ -293,7 +295,7 @@ glm::mat4 computeLightSpaceTrMatrix()
 		lightView = glm::lookAt(glm::vec3(0.0f, 1.3533f, -0.002f), glm::vec3(-0.15f, 0.40f, -0.002f), glm::vec3(1.0f, 1.0f, 1.0f));
 
 	const GLfloat near_plane = 0.1f, far_plane = 5.0f;
-	glm::mat4 lightProjection = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, near_plane, far_plane);
+	glm::mat4 lightProjection = glm::ortho(-2.0f, 2.0f, -2.0f, 2.0f, near_plane, far_plane);
 	glm::mat4 lightSpaceTrMatrix = lightProjection * lightView;
 
 	return lightSpaceTrMatrix;
@@ -409,24 +411,43 @@ void drawObjects(gps::Shader shader, bool depthPass)
 	sky.Draw(shader);
 
 
-	modelChestUp2 = glm::translate(glm::mat4(1.0f), glm::vec3(-0.477693f, 0.141047f, -0.124566f));
-	modelChestUp = glm::rotate(glm::mat4(1.0f), glm::radians(angleY), glm::vec3(0, 0, 1));
-	modelChestUp3 = glm::translate(glm::mat4(1.0f), glm::vec3(0.477693f, -0.141047f, +0.124566f));
-	modelChestUp3 = modelChestUp3 * modelChestUp * modelChestUp2;
-	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelChestUp3));
+
+	modelChestUp2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.477693f, -0.141047f, +0.124566f)); 
+	modelChestUp = glm::rotate(glm::mat4(1.0f), glm::radians(chestRotation), glm::vec3(0, 0, 1));
+	
+	if (chest_var)
+	{
+		chestRotation -= 0.03f;
+	}
+	else
+	{
+		chestRotation += 0.03f;
+	}
+
+	if (chestRotation > 0.0f)
+		chest_var = true;
+
+	if (chestRotation < -1.0f)
+		chest_var = false;
+
+	modelGarf1 = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0, 1, 0));
+
+	modelChestUp3 = glm::translate(glm::mat4(1.0f), glm::vec3(-0.477693f, 0.141047f, -0.124566f));
+	modelChestUp4 = modelGarf1 * modelChestUp2 * modelChestUp * modelChestUp3 ;
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelChestUp4));
 	chest_up.Draw(shader);
 	
 	
 
 	if (light_var < 0)
 	{
-		modelMoon = glm::rotate(glm::mat4(1.0f), glm::radians(angleY), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelMoon = glm::rotate(glm::mat4(1.0f), glm::radians(globalObjRotationAngle), glm::vec3(0.0f, 1.0f, 0.0f));
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMoon));
 		moon.Draw(shader);
 	}
 
 
-	modelGarf1 = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0, 1, 0));
+	
 	modelGarf2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, jump_var, 0.0f));
 	modelGarf3 = modelGarf1 * modelGarf2;
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelGarf3));
@@ -451,19 +472,19 @@ void drawObjects(gps::Shader shader, bool depthPass)
 	if (rain_check == true) 
 	{
 
-		modelCloud = glm::rotate(glm::mat4(1.0f), glm::radians(-angleY), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelCloud = glm::rotate(glm::mat4(1.0f), glm::radians(-globalObjRotationAngle), glm::vec3(0.0f, 1.0f, 0.0f));
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelCloud));
 		cloud.Draw(shader);
 
 
-		modelRain4 = glm::rotate(glm::mat4(1.0f), glm::radians(angleY), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelRain4 = glm::rotate(glm::mat4(1.0f), glm::radians(globalObjRotationAngle), glm::vec3(0.0f, 1.0f, 0.0f));
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelRain4));
 
 		modelRain5 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, rain_var, 0.0f));
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelRain5));
 
 
-		modelRain2 = glm::rotate(glm::mat4(1.0f), glm::radians(-angleY), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelRain2 = glm::rotate(glm::mat4(1.0f), glm::radians(-globalObjRotationAngle), glm::vec3(0.0f, 1.0f, 0.0f));
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelRain2));
 
 		modelRain1 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, rain_var, 0.0f));
@@ -506,49 +527,49 @@ void drawObjects(gps::Shader shader, bool depthPass)
 		rain2.Draw(shader);
 	}
 
-	angleY++;
+	globalObjRotationAngle++;
 
-	modelShark1 = glm::rotate(glm::mat4(1.0f), glm::radians(-angleY), glm::vec3(0.0f, 1.0f, 0.0f));
+	modelShark1 = glm::rotate(glm::mat4(1.0f), glm::radians(-globalObjRotationAngle), glm::vec3(0.0f, 1.0f, 0.0f));
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelShark1));
 	shark1.Draw(shader);
 
-	modelShark2 = glm::rotate(glm::mat4(1.0f), glm::radians(-angleY), glm::vec3(0.0f, 1.0f, 0.0f));
+	modelShark2 = glm::rotate(glm::mat4(1.0f), glm::radians(-globalObjRotationAngle), glm::vec3(0.0f, 1.0f, 0.0f));
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelShark2));
 	shark2.Draw(shader);
 
-	modelShark3 = glm::rotate(glm::mat4(1.0f), glm::radians(angleY), glm::vec3(0.0f, 1.0f, 0.0f));
+	modelShark3 = glm::rotate(glm::mat4(1.0f), glm::radians(globalObjRotationAngle), glm::vec3(0.0f, 1.0f, 0.0f));
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelShark3));
 	shark3.Draw(shader);
 
-	modelShark4 = glm::rotate(glm::mat4(1.0f), glm::radians(angleY), glm::vec3(0.0f, 1.0f, 0.0f));
+	modelShark4 = glm::rotate(glm::mat4(1.0f), glm::radians(globalObjRotationAngle), glm::vec3(0.0f, 1.0f, 0.0f));
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelShark4));
 	shark4.Draw(shader);
 
-	modelGull1 = glm::rotate(glm::mat4(1.0f), glm::radians(angleY), glm::vec3(0.0f, 1.0f, 0.0f));
+	modelGull1 = glm::rotate(glm::mat4(1.0f), glm::radians(globalObjRotationAngle), glm::vec3(0.0f, 1.0f, 0.0f));
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelGull1));
 	gull1.Draw(shader);
 
-	modelGull2 = glm::rotate(glm::mat4(1.0f), glm::radians(angleY), glm::vec3(0.0f, 1.0f, 0.0f));
+	modelGull2 = glm::rotate(glm::mat4(1.0f), glm::radians(globalObjRotationAngle), glm::vec3(0.0f, 1.0f, 0.0f));
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelGull2));
 	gull2.Draw(shader);
 
-	modelGull3 = glm::rotate(glm::mat4(1.0f), glm::radians(angleY), glm::vec3(0.0f, 1.0f, 0.0f));
+	modelGull3 = glm::rotate(glm::mat4(1.0f), glm::radians(globalObjRotationAngle), glm::vec3(0.0f, 1.0f, 0.0f));
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelGull3));
 	gull3.Draw(shader);
 
-	modelGull4 = glm::rotate(glm::mat4(1.0f), glm::radians(angleY), glm::vec3(0.0f, 1.0f, 0.0f));
+	modelGull4 = glm::rotate(glm::mat4(1.0f), glm::radians(globalObjRotationAngle), glm::vec3(0.0f, 1.0f, 0.0f));
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelGull4));
 	gull4.Draw(shader);
 
-	modelGull5 = glm::rotate(glm::mat4(1.0f), glm::radians(angleY), glm::vec3(0.0f, 1.0f, 0.0f));
+	modelGull5 = glm::rotate(glm::mat4(1.0f), glm::radians(globalObjRotationAngle), glm::vec3(0.0f, 1.0f, 0.0f));
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelGull5));
 	gull5.Draw(shader);
 
-	modelGull6 = glm::rotate(glm::mat4(1.0f), glm::radians(angleY), glm::vec3(0.0f, 1.0f, 0.0f));
+	modelGull6 = glm::rotate(glm::mat4(1.0f), glm::radians(globalObjRotationAngle), glm::vec3(0.0f, 1.0f, 0.0f));
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelGull6));
 	gull6.Draw(shader);
 
-	modelGull7 = glm::rotate(glm::mat4(1.0f), glm::radians(angleY), glm::vec3(0.0f, 1.0f, 0.0f));
+	modelGull7 = glm::rotate(glm::mat4(1.0f), glm::radians(globalObjRotationAngle), glm::vec3(0.0f, 1.0f, 0.0f));
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelGull7));
 	gull7.Draw(shader);
 
