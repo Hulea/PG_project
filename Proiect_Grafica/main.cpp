@@ -43,6 +43,7 @@ glm::mat4 modelFire;
 glm::mat4 modelMoon;
 glm::mat4 modelSky;
 glm::mat4 modelChestUp, modelChestUp2, modelChestUp3, modelChestUp4;
+glm::mat4 modelChestUp5;
 glm::mat4 model;
 glm::mat4 view;
 glm::mat4 projection;
@@ -413,27 +414,27 @@ void drawObjects(gps::Shader shader, bool depthPass)
 
 
 	modelChestUp2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.477693f, -0.141047f, +0.124566f)); 
-	modelChestUp = glm::rotate(glm::mat4(1.0f), glm::radians(chestRotation), glm::vec3(0, 0, 1));
+	modelChestUp = glm::rotate(glm::mat4(1.0f), glm::radians(chestRotation), glm::vec3(-0.477693f, +0.141047f, -0.124566f));
 	
 	if (chest_var)
 	{
-		chestRotation -= 0.03f;
+		chestRotation -= 0.055f;
 	}
 	else
 	{
-		chestRotation += 0.03f;
+		chestRotation += 0.055f;
 	}
 
-	if (chestRotation > 0.0f)
+	if (chestRotation > 1.0f)
 		chest_var = true;
 
-	if (chestRotation < -1.0f)
+	if (chestRotation < -2.0f)
 		chest_var = false;
 
-	modelGarf1 = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0, 1, 0));
+	modelChestUp5 = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0, 1, 0));
 
 	modelChestUp3 = glm::translate(glm::mat4(1.0f), glm::vec3(-0.477693f, 0.141047f, -0.124566f));
-	modelChestUp4 = modelGarf1 * modelChestUp2 * modelChestUp * modelChestUp3 ;
+	modelChestUp4 = modelChestUp5 * modelChestUp2 * modelChestUp * modelChestUp3;
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelChestUp4));
 	chest_up.Draw(shader);
 	
