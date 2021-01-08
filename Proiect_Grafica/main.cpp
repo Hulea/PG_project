@@ -224,14 +224,14 @@ void processMovement()
 	if (pressedKeys[GLFW_KEY_C]) 
 		glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
 
-	if (pressedKeys[GLFW_KEY_V])
-	{
-		glEnable(GL_BLEND);
-		glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
-		glEnable(GL_POLYGON_SMOOTH);
-		//glEnable(GL_LINE_SMOOTH);
-		glBlendFunc(GL_SRC_ALPHA_SATURATE, GL_ONE);
-	}
+//	if (pressedKeys[GLFW_KEY_V])
+	//{
+	//	glEnable(GL_BLEND);
+	//	glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+	//	glEnable(GL_POLYGON_SMOOTH);
+	//	//glEnable(GL_LINE_SMOOTH);
+	//	glBlendFunc(GL_SRC_ALPHA_SATURATE, GL_ONE);
+	//}
 
 }
 
@@ -413,42 +413,8 @@ void drawObjects(gps::Shader shader, bool depthPass)
 
 
 
-	modelChestUp2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.477693f, -0.141047f, +0.124566f)); 
-	modelChestUp = glm::rotate(glm::mat4(1.0f), glm::radians(chestRotation), glm::vec3(-0.477693f, +0.141047f, -0.124566f));
-	
-	if (chest_var)
-	{
-		chestRotation -= 0.055f;
-	}
-	else
-	{
-		chestRotation += 0.055f;
-	}
 
-	if (chestRotation > 1.0f)
-		chest_var = true;
-
-	if (chestRotation < -2.0f)
-		chest_var = false;
-
-	modelChestUp5 = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0, 1, 0));
-
-	modelChestUp3 = glm::translate(glm::mat4(1.0f), glm::vec3(-0.477693f, 0.141047f, -0.124566f));
-	modelChestUp4 = modelChestUp5 * modelChestUp2 * modelChestUp * modelChestUp3;
-	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelChestUp4));
-	chest_up.Draw(shader);
-	
-	
-
-	if (light_var < 0)
-	{
-		modelMoon = glm::rotate(glm::mat4(1.0f), glm::radians(globalObjRotationAngle), glm::vec3(0.0f, 1.0f, 0.0f));
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMoon));
-		moon.Draw(shader);
-	}
-
-
-	
+	modelGarf1 = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0, 1, 0));
 	modelGarf2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, jump_var, 0.0f));
 	modelGarf3 = modelGarf1 * modelGarf2;
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelGarf3));
@@ -468,7 +434,54 @@ void drawObjects(gps::Shader shader, bool depthPass)
 	if (jump_var < 0.005)
 		jump_bool = false;
 
+
 	garfield.Draw(shader);
+
+
+	modelChestUp2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.477693f, -0.141047f, +0.124566f)); 
+	//modelChestUp2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f,0.0f,0.0f)); 
+	modelChestUp3 = glm::rotate(glm::mat4(1.0f), glm::radians(chestRotation), glm::vec3(0.0f, 0.0f, 1.0f));
+	
+	if (chest_var)
+	{
+		chestRotation -= 0.55f;
+	}
+	else
+	{
+		chestRotation += 0.55f;
+	}
+
+	if (chestRotation > 1.0f)
+		chest_var = true;
+
+	if (chestRotation < -100.0f)
+		chest_var = false;
+
+	
+
+	modelChestUp4 = glm::translate(glm::mat4(1.0f), glm::vec3(-0.477693f, 0.141047f, -0.124566f));
+	//modelChestUp4 = glm::translate(glm::mat4(1.0f), glm::vec3(-0.0f, -0.0f, -0.0f));
+	//modelChestUp4 = modelChestUp5 * modelChestUp2 * modelChestUp * modelChestUp3;
+	modelChestUp = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0, 1, 0));
+	modelChestUp5 = modelChestUp * modelChestUp4 * modelChestUp3 * modelChestUp2;
+
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelChestUp5));
+	chest_up.Draw(shader);
+	
+	
+
+	if (light_var < 0)
+	{
+		modelMoon = glm::rotate(glm::mat4(1.0f), glm::radians(globalObjRotationAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMoon));
+		moon.Draw(shader);
+	}
+
+
+	
+	
+
+	
 
 	if (rain_check == true) 
 	{
