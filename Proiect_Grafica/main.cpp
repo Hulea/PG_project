@@ -54,7 +54,7 @@ glm::mat3 normalMatrix;
 glm::vec3 lightDir;
 glm::vec3 lightColor;
 
-GLfloat angle;
+GLfloat map_angle;
 GLuint modelLoc, modelLoc2;
 GLuint viewLoc;
 GLuint projectionLoc;
@@ -91,6 +91,12 @@ float globalObjRotationAngle = 0.0f;
 float chestRotation = 0.0f;
 int chest_var = false;
 bool first = true;
+bool presentation = false;
+float big_yaw = 0.0f;
+float big_pitch = 0.0f;
+bool py_bool = false;
+bool yaw_bool = true;
+bool presentation_start = false;
 
 GLenum glCheckError_(const char* file, int line)
 {
@@ -128,7 +134,6 @@ GLenum glCheckError_(const char* file, int line)
 
 void windowResizeCallback(GLFWwindow* window, int width, int height) {
 	fprintf(stdout, "Window resized! New width: %d , and height: %d\n", width, height);
-	//TODO
 	glViewport(0, 0, width, height);
 }
 
@@ -162,6 +167,14 @@ void keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int
 			rain_check = false;
 		else rain_check = true;
 	}
+
+	if (key == GLFW_KEY_P && action == GLFW_PRESS) 
+	{
+		if (presentation == true)
+			presentation = false;
+		else
+			presentation = true;
+	}
 }
 
 void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
@@ -187,14 +200,14 @@ void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 void processMovement()
 {
 	if (pressedKeys[GLFW_KEY_Q]) {
-		angle -= 1.0f;
-		model = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0, 1, 0));
+		map_angle -= 1.0f;
+		model = glm::rotate(glm::mat4(1.0f), glm::radians(map_angle), glm::vec3(0, 1, 0));
 		first = false;
 	}
 
 	if (pressedKeys[GLFW_KEY_E]) {
-		angle += 1.0f;
-		model = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0, 1, 0));
+		map_angle += 1.0f;
+		model = glm::rotate(glm::mat4(1.0f), glm::radians(map_angle), glm::vec3(0, 1, 0));
 		first = false;
 	}
 	if (pressedKeys[GLFW_KEY_W]) 
@@ -224,15 +237,6 @@ void processMovement()
 	if (pressedKeys[GLFW_KEY_C]) 
 		glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
 
-//	if (pressedKeys[GLFW_KEY_V])
-	//{
-	//	glEnable(GL_BLEND);
-	//	glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
-	//	glEnable(GL_POLYGON_SMOOTH);
-	//	//glEnable(GL_LINE_SMOOTH);
-	//	glBlendFunc(GL_SRC_ALPHA_SATURATE, GL_ONE);
-	//}
-
 }
 
 void initOpenGLWindow()
@@ -248,11 +252,9 @@ void initOpenGLState()
 	glClearColor(0.7f, 0.7f, 0.7f, 1.0f);
 	glViewport(0, 0, myWindow.getWindowDimensions().width, myWindow.getWindowDimensions().height);
 	glEnable(GL_FRAMEBUFFER_SRGB);
-	glEnable(GL_DEPTH_TEST); // enable depth-testing
-	glDepthFunc(GL_LESS); // depth-testing interprets a smaller value as "closer"
-	//glEnable(GL_CULL_FACE); // cull face
-	//glCullFace(GL_BACK); // cull back face
-	glFrontFace(GL_CCW); // GL_CCW for counter clock-wise
+	glEnable(GL_DEPTH_TEST); 
+	glDepthFunc(GL_LESS);
+	glFrontFace(GL_CCW); 
 }
 
 void initModels() 
@@ -293,7 +295,8 @@ glm::mat4 computeLightSpaceTrMatrix()
 	if (light_var > 0)
 		lightView = glm::lookAt(lightDir, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	else
-		lightView = glm::lookAt(glm::vec3(0.0f, 1.3533f, -0.002f), glm::vec3(-0.15f, 0.40f, -0.002f), glm::vec3(1.0f, 1.0f, 1.0f));
+		
+		lightView = glm::lookAt(glm::vec3(0.0f, 1.3533f, -0.002f), glm::vec3(-0.0502f, 0.13355f, 0.08563f), glm::vec3(1.0f, 1.0f, 1.0f));
 
 	const GLfloat near_plane = 0.1f, far_plane = 5.0f;
 	glm::mat4 lightProjection = glm::ortho(-2.0f, 2.0f, -2.0f, 2.0f, near_plane, far_plane);
@@ -302,25 +305,26 @@ glm::mat4 computeLightSpaceTrMatrix()
 	return lightSpaceTrMatrix;
 }
 
+
 void initUniforms() 
 {
 
 	myCustomShader.useShaderProgram();
 
-	model = glm::mat4(1.0f);
-	modelLoc = glGetUniformLocation(myCustomShader.shaderProgram, "model");
-	
-	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
-	if (light_var > 0)
-		view = myCamera.getViewMatrix();
-	else
-		view = myCamera.getSmallLightPointMatrix();
+	view = myCamera.getViewMatrix();
+
 
 	viewLoc = glGetUniformLocation(myCustomShader.shaderProgram, "view");
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-
 	glUniformMatrix4fv(glGetUniformLocation(myCustomShader.shaderProgram, "smallLightView"), 1, GL_FALSE, glm::value_ptr(view));
+
+	model = glm::mat4(1.0f);
+	modelLoc = glGetUniformLocation(myCustomShader.shaderProgram, "model");
+
+
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
 
 	normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
 	normalMatrixLoc = glGetUniformLocation(myCustomShader.shaderProgram, "normalMatrix");
@@ -336,7 +340,7 @@ void initUniforms()
 
 	glUniform3fv(lightDirLoc, 1, glm::value_ptr(glm::inverseTranspose(glm::mat3(view * lightRotation)) * lightDir));
 
-	lightColor = glm::vec3(1.0f, 1.0f, 1.0f); //white
+	lightColor = glm::vec3(1.0f, 1.0f, 1.0f); 
 	lightColorLoc = glGetUniformLocation(myCustomShader.shaderProgram, "lightColor");
 	glUniform3fv(lightColorLoc, 1, glm::value_ptr(lightColor));
 
@@ -344,12 +348,8 @@ void initUniforms()
 
 void initFBO() 
 {
-	//TODO - Create the FBO, the depth texture and attach the depth texture to the FBO
-
-	//generate FBO ID
 	glGenFramebuffers(1, &shadowMapFBO);
 
-	//create depth texture for FBO
 	glGenTextures(1, &depthMapTexture);
 	glBindTexture(GL_TEXTURE_2D, depthMapTexture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
@@ -372,8 +372,59 @@ void initFBO()
 
 }
 
+
 void drawObjects(gps::Shader shader, bool depthPass) 
 {
+
+	if (presentation == true)
+	{
+		if (presentation_start == false) {
+			big_yaw = 0.0f;
+			big_pitch = 0.0f;
+			py_bool = false;
+			yaw_bool = true;
+			presentation_start = false;
+			gps::Camera myCamera(
+				glm::vec3(1.0f, 1.0f, 1.0f),
+				glm::vec3(0.0f, 0.0f, 0.0f),
+				glm::vec3(0.0f, 1.0f, 0.0f));
+			presentation_start = true;
+		}
+
+		myCamera.rotate(big_yaw, big_pitch);
+
+		if (big_pitch > 0.017f)
+		{
+			py_bool = true;
+
+		}
+
+		if (big_pitch < -0.015f)
+		{
+			py_bool = false;
+
+		}
+
+		if (py_bool == false)
+		{
+			big_pitch += 0.00005f;
+			myCamera.move(gps::MOVE_DOWN, cameraSpeed / 32);
+		}
+		else
+		{
+			big_pitch -= 0.00005f;
+			myCamera.move(gps::MOVE_UP, cameraSpeed / 32);
+		}
+
+
+		myCamera.move(gps::MOVE_FORWARD, cameraSpeed / 13);
+
+
+	}
+
+	else
+		presentation_start = false;
+
 
 	shader.useShaderProgram();
 
@@ -381,11 +432,8 @@ void drawObjects(gps::Shader shader, bool depthPass)
 
 	if (!depthPass) 
 	{
-		if (light_var > 0)
-			normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
-
-		else
-			normalMatrix = glm::mat3(glm::inverseTranspose(myCamera.getSmallLightPointMatrix() * model));
+			
+		normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
 
 		glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
 	}
@@ -393,28 +441,9 @@ void drawObjects(gps::Shader shader, bool depthPass)
 	island.Draw(shader);
 	fire.Draw(shader);
 
-
-
-	/*if (pressedKeys[GLFW_KEY_Q]) {
-		modelSky = lightRotation;
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelSky));
-		sky.Draw(shader);
-	}
-	else
-		sky.Draw(shader);
-
-	if (pressedKeys[GLFW_KEY_E]) {
-		modelSky = lightRotation;
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelSky));
-		sky.Draw(shader);
-	}
-	else*/
 	sky.Draw(shader);
 
-
-
-
-	modelGarf1 = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0, 1, 0));
+	modelGarf1 = glm::rotate(glm::mat4(1.0f), glm::radians(map_angle), glm::vec3(0, 1, 0));
 	modelGarf2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, jump_var, 0.0f));
 	modelGarf3 = modelGarf1 * modelGarf2;
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelGarf3));
@@ -439,7 +468,6 @@ void drawObjects(gps::Shader shader, bool depthPass)
 
 
 	modelChestUp2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.477693f, -0.141047f, +0.124566f)); 
-	//modelChestUp2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f,0.0f,0.0f)); 
 	modelChestUp3 = glm::rotate(glm::mat4(1.0f), glm::radians(chestRotation), glm::vec3(0.0f, 0.0f, 1.0f));
 	
 	if (chest_var)
@@ -457,19 +485,12 @@ void drawObjects(gps::Shader shader, bool depthPass)
 	if (chestRotation < -100.0f)
 		chest_var = false;
 
-	
-
 	modelChestUp4 = glm::translate(glm::mat4(1.0f), glm::vec3(-0.477693f, 0.141047f, -0.124566f));
-	//modelChestUp4 = glm::translate(glm::mat4(1.0f), glm::vec3(-0.0f, -0.0f, -0.0f));
-	//modelChestUp4 = modelChestUp5 * modelChestUp2 * modelChestUp * modelChestUp3;
-	modelChestUp = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0, 1, 0));
+	modelChestUp = glm::rotate(glm::mat4(1.0f), glm::radians(map_angle), glm::vec3(0, 1, 0));
 	modelChestUp5 = modelChestUp * modelChestUp4 * modelChestUp3 * modelChestUp2;
-
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelChestUp5));
 	chest_up.Draw(shader);
 	
-	
-
 	if (light_var < 0)
 	{
 		modelMoon = glm::rotate(glm::mat4(1.0f), glm::radians(globalObjRotationAngle), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -477,11 +498,6 @@ void drawObjects(gps::Shader shader, bool depthPass)
 		moon.Draw(shader);
 	}
 
-
-	
-	
-
-	
 
 	if (rain_check == true) 
 	{
@@ -605,7 +621,6 @@ void renderScene()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	glViewport(0, 0, myWindow.getWindowDimensions().width, myWindow.getWindowDimensions().height);
-	// final scene rendering pass (with shadows)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	myCustomShader.useShaderProgram();
@@ -616,7 +631,6 @@ void renderScene()
 	lightRotation = glm::rotate(glm::mat4(1.0f), glm::radians(lightAngle), glm::vec3(0.0f, 1.0f, 0.0f));
 	glUniform3fv(lightDirLoc, 1, glm::value_ptr(glm::inverseTranspose(glm::mat3(view * lightRotation)) * lightDir));
 
-	//bind the shadow map
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, depthMapTexture);
 
